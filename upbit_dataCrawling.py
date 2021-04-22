@@ -46,7 +46,7 @@ def get_days_data(code, save=False,save_root='./'):
             break
     data = data.sort_values(by=["Time"], axis=0)
     if save is True:
-        data.to_csv(save_root+"Upbit_BTC_daysData.csv",index=False)
+        data.to_csv(save_root+f"Upbit_{code}_daysData.csv",index=False)
     return data
 
 def minutes_crawller(code, minute, date):
@@ -93,11 +93,11 @@ def get_minutes_data(code, minute, save=False, save_root='./'):
         data.to_csv(save_root+f"Upbit_BTC_{minute}_Data.csv",index=False)
     return data
 
-COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC','EMC2','ETH','ETC','ZIL','ADA']
+COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC',]#'EOS','ETH','ETC','ZIL','ADA','XRP','DOT','XLM','ATOM']
 
+# code = "BTC"
 Data_save_Path="./data/"
 
-code = "BTC"
-
-get_days_data(code,save=True,save_root=Data_save_Path)
-get_minutes_data(code, minute='240', save=True, save_root=Data_save_Path)
+for coin in COIN_LIST:
+    get_days_data(code,save=True,save_root=Data_save_Path)
+    get_minutes_data(code, minute='240', save=True, save_root=Data_save_Path)
