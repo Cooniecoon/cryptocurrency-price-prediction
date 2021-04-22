@@ -2,11 +2,11 @@ import pandas as pd
 import numpy as np
 import datetime
 import pyupbit
-from keras.models import Sequential
-from keras.layers import LSTM, Dropout, Dense, Activation
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from keras.losses import Huber
-from keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dropout, Dense, Activation
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.losses import Huber
+from tensorflow.keras.optimizers import Adam
 import datetime
 import requests
 from bs4 import BeautifulSoup
@@ -64,8 +64,28 @@ def input_reshape(data):
     data = np.array(data)
     return np.reshape(data, (data.shape[0], data.shape[1], 1))
 
+def model():
+    with tf.device("gpu:0"):
+        model = Sequential()
 
-code = "KRW-DOT"
+        # model.add(LSTM(seq_len, return_sequences=True, input_shape=(seq_len, 1)))
+
+        # model.add(LSTM(64, return_sequences=True))
+        # model.add(LSTM(32, return_sequences=False))
+
+        # model.add(Dense(32, activation="linear"))
+        # model.add(Dense(1, activation="linear"))
+
+        model.add(LSTM(32, return_sequences=True, input_shape=(seq_len, 1)))
+        model.add(Dropout(rate=0.2))
+
+        model.add(LSTM(64, return_sequences=True))
+        model.add(Dropout(0.2))
+
+        model.add(LSTM(32, return_sequences=False))
+        model.add(Dense(1))
+    return model
+code = "KRW-BTC"
 
 data_path = ".\\data\\DOT_KRW_15_2021_3_5_11_20_46.csv"
 
