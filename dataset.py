@@ -2,6 +2,15 @@ import tensorflow as tf
 import os
 import pathlib
 import cv2
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Flatten,Input
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import MaxPooling2D
+# from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+
 data_dir='./data/chart/day/'
 
 data_dir = pathlib.Path(data_dir)
@@ -11,8 +20,8 @@ print(len(chart_imgs))
 def import_model():
     with tf.device("gpu:0"):
         model = Sequential()
-
-        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(300,300,3)))
+        model.add(Input((300,300,3)))
+        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu')) #, input_shape=(300,300,3)
         model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
@@ -43,7 +52,7 @@ def get_chart_data(*paths):
         label=label_to_index[str(path).split('\\\\')[-2]]
         img=cv2.imread(str(path))
         img=cv2.resize(img,(300,300))
-        print('label ',label)
+        # print('label ',label)
         yield (img/255, label)
 
 
@@ -61,12 +70,13 @@ for image, label in dataset.take(1):
     print("Image shape: ", image.numpy().shape)
     print("Label: ", label.numpy())
 
-
-dataset = dataset.shuffle(150).batch(8)
+batch_size=2
+epochs=10
+dataset = dataset.shuffle(2).batch(batch_size)
 
 
 
 model = import_model()
 
 model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy',])
-model.fit(dataset, epochs=10)
+model.fit(dataset, epochs=epochs,batch_size=batch_size)
