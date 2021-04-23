@@ -1,154 +1,72 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
+import os
+import pathlib
 import cv2
-import numpy as np
+data_dir='./data/chart/day/'
 
-from tensorflow.keras import layers
-from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, Activation, add
-from tensorflow.keras.models import Model, Sequential
+data_dir = pathlib.Path(data_dir)
+chart_imgs = list(data_dir.glob('*/*.jpg'))
+print(len(chart_imgs))
 
-from tensorflow.keras.optimizers import *
+def import_model():
+    with tf.device("gpu:0"):
+        model = Sequential()
 
-def CandleModel(SHAPE, nb_classes, seed=None):
-    # We can't use ResNet50 directly, as it might cause a negative dimension
-    # error.
-    if seed:
-        np.random.seed(seed)
+        model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(300,300,3)))
+        model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
 
-    input_layer = Input(shape=SHAPE)
+        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
 
-    # Step 1
-    x = Conv2D(32, 3, 3 ,
-               padding='same', activation='relu')(input_layer)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-
-    # Step 1
-    x = Conv2D(48, 3, 3 , padding='same',
-               activation='relu')(x)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.25)(x)
-
-    # Step 1
-    x = Conv2D(64, 3, 3 , padding='same',
-               activation='relu')(x)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-
-    # Step 1
-    x = Conv2D(96, 3, 3 , padding='same',
-               activation='relu')(x)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.25)(x)
-
-    # Step 3 - Flattening
-    x = Flatten()(x)
-
-    # Step 4 - Full connection
-
-    x = Dense(output_dim=256, activation='relu')(x)
-    # Dropout
-    x = Dropout(0.5)(x)
-
-    x = Dense(output_dim=2, activation='softmax')(x)
-
-    model = Model(input_layer, x)
-
+        model.add(Flatten())
+        model.add(Dense(1024, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(1, activation='softmax'))
     return model
 
-batch_size=16
-img_height, img_width = 300, 400
-channel = 3
-epochs = 10
-SHAPE = (img_width, img_height, channel)
-def get_label(file_path):
-    parts=str(file_path.numpy()).split('\\\\')[-2]
-    path=str(file_path.numpy()).replace('\\\\','/')
-    path=path.replace('b','')
-    path=path.replace('\'','')
-    # print(path)
-    # The second to last is the class-directory
-    one_hot = parts == class_names
-    # Integer encode the label
-    label = tf.argmax(one_hot)
-    # img = cv2.imread(path)
-    # img = cv2.resize(img,(img_width,img_height),interpolation=cv2.INTER_AREA)
-    img = tf.io.read_file(file_path)
-    img = decode_img(img)
-    # img = decode_img(img)
-    return img, label
 
-def test(file_path):
-    print(file_path.as_numpy_iterator())
-    parts=str(file_path.as_numpy_iterator()).split('\\\\')[-2]
-    path=str(file_path.as_numpy_iterator()).replace('\\\\','/')
-    path=path.replace('b','')
-    path=path.replace('\'','')
-    # print(path)
-    # The second to last is the class-directory
-    one_hot = parts == class_names
-    # Integer encode the label
-    label = tf.argmax(one_hot)
-    # img = cv2.imread(path)
-    # img = cv2.resize(img,(img_width,img_height),interpolation=cv2.INTER_AREA)
-    img = tf.io.read_file(file_path)
-    img = decode_img(img)
-    # img = decode_img(img)
-    return img, label
 
-def decode_img(img):
-    # convert the compressed string to a 3D uint8 tensor
-    img = tf.image.decode_png(img, channels=3)
-    # resize the image to the desired size
-    return tf.image.resize(img, [img_height, img_width])
+def get_chart_data(*paths):
+    label_to_index = {'down':0,'up':1}
+    for path in paths:
+        path=str(path)
+        path=path.replace('b','')
+        path=path.replace('\'','')
+        print('\n\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        print('path : ',path.split('\\\\'))
+        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n\n')
+        label=label_to_index[str(path).split('\\\\')[-2]]
+        img=cv2.imread(str(path))
+        img=cv2.resize(img,(300,300))
+        print('label ',label)
+        yield (img/255, label)
 
-def process_path(file_path):
-    label = get_label(file_path)
-    # load the raw data from the file as a string
-    img = tf.io.read_file(file_path)
-    img = decode_img(img)
-    return img, label
 
-# model=CandleModel(SHAPE, 2)
-# print(model.summary)
-# model.compile(
-#     optimizer='adam',
-#     loss=tf.losses.BinaryCrossentropy(from_logits=True),
-#     metrics=['accuracy'])
+# gen = get_chart_data(data_dir)
+# print(next(gen))
+
+
+dataset = tf.data.Dataset.from_generator(get_chart_data,
+                                         (tf.float32, tf.int8),
+                                        (tf.TensorShape([300,300,3]), tf.TensorShape([])),
+                                         args=[str(i) for i in chart_imgs])
+
+
+for image, label in dataset.take(1):
+    print("Image shape: ", image.numpy().shape)
+    print("Label: ", label.numpy())
+
+
+dataset = dataset.shuffle(150).batch(8)
 
 
 
-data_dir='./data/chart/*/day/*/*.png'
+model = import_model()
 
-list_ds = tf.data.Dataset.list_files(data_dir, shuffle=True)
-f=list_ds.take(1)
-print(str(list(f.as_numpy_iterator())[0]).split('\\')[-3])
-
-class_names = np.array(['up','down'])
-image_count = tf.data.experimental.cardinality(list_ds).numpy()
-
-val_size = int(image_count * 0.2)
-train_ds = list_ds.skip(val_size)
-val_ds = list_ds.take(val_size)
-
-print(tf.data.experimental.cardinality(train_ds).numpy())
-print(tf.data.experimental.cardinality(val_ds).numpy())
-
-AUTOTUNE = tf.data.experimental.AUTOTUNE
-train_label=[]
-# for f in val_ds.take(tf.data.experimental.cardinality(val_ds).numpy()):
-#     # print(str(f.numpy()).split('\\')[-3])
-    
-#     train_label.append(get_label(f))
-
-
-# train_ds = train_ds.map(get_label, num_parallel_calls=AUTOTUNE)
-val_ds = val_ds.map(test, num_parallel_calls=AUTOTUNE)
-# train_label=np.array(train_label)
-# print(train_label.shape)
-
-# for image, label in train_ds.take(1):
-#     print("Image shape: ", image.numpy().shape)
-#     print("Label: ", label.numpy())
+model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy',])
+model.fit(dataset, epochs=10)
