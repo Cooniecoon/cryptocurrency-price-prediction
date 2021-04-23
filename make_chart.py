@@ -5,16 +5,17 @@ import pandas as pd
 from datetime import datetime
 
 # COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC',]
-COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC','EOS','ETH','ETC','ZIL','ADA','XRP','DOT','XLM','ATOM']
+COIN_LIST=['BTC']#,'BCH','BTG','BSV','BCHA','LTC','EOS','ETH','ETC','ZIL','ADA','XRP','DOT','XLM','ATOM']
 
 
 
 
 for coin in COIN_LIST:
-    for time_unit in ['day', '240']:
-        fig = plt.figure(facecolor=(0,0,0),figsize=(6,6))
-        top_axes = plt.subplot2grid((5,5), (0,0), rowspan=3, colspan=5)
-        bottom_axes = plt.subplot2grid((5,5), (3,0), rowspan=2, colspan=5, sharex=top_axes)
+    # for time_unit in ['day', '240']:
+    for time_unit in ['day']:
+        fig = plt.figure(facecolor=(0,0,0),figsize=(0.5,0.5))
+        top_axes = plt.subplot2grid((5,5), (0,0), rowspan=4, colspan=5)
+        bottom_axes = plt.subplot2grid((5,5), (4,0), rowspan=1, colspan=5, sharex=top_axes)
         bottom_axes.get_yaxis().get_major_formatter().set_scientific(False)
         plt.tight_layout(pad=0.0,h_pad=0.0,w_pad=0.0)
         # plt.style.use(['dark_background'])
@@ -26,7 +27,8 @@ for coin in COIN_LIST:
         df['MA3'] = df['TradePrice'].rolling(3).mean()
         df['MA5'] = df['TradePrice'].rolling(5).mean()
         df['MA10'] = df['TradePrice'].rolling(10).mean()
-        df['MA20'] = df['TradePrice'].rolling(20).mean()
+        df['MA30'] = df['TradePrice'].rolling(30).mean()
+        df['MA60'] = df['TradePrice'].rolling(60).mean()
 
         # index = [i.split('T')[0][2:] for i in list(df['Time'])] # 캔들스틱 x축
         end_point=df.index.stop
@@ -45,31 +47,35 @@ for coin in COIN_LIST:
             # index = [i.split('T')[0][2:] for i in list(df_terminated['Time'])] # 캔들스틱 x축
             index=df_terminated['Time']  
             # 이동평균선 그리기
-            top_axes.plot(index, df_terminated['MA3'], label='MA3', linewidth=1)
-            top_axes.plot(index, df_terminated['MA5'], label='MA5', linewidth=1)
-            top_axes.plot(index, df_terminated['MA10'], label='MA10', linewidth=1)
+            top_axes.plot(index, df_terminated['MA3'], label='MA3', linewidth=0.6)
+            top_axes.plot(index, df_terminated['MA5'], label='MA5', linewidth=0.6)
+            top_axes.plot(index, df_terminated['MA10'], label='MA10', linewidth=0.6)
+            top_axes.plot(index, df_terminated['MA30'], label='MA30', linewidth=0.6)
+            top_axes.plot(index, df_terminated['MA60'], label='MA60', linewidth=0.6)
 
 
             candlestick2_ohlc(top_axes, df_terminated['OpeningPrice'], df_terminated['HighPrice'], 
                             df_terminated['LowPrice'], df_terminated['TradePrice'],
-                            width=0.9, colorup='r', colordown='b',alpha=1)
+                            width=1.0, colorup='r', colordown='b',alpha=1)
             
             color_fuc = lambda x : 'r' if x >= 0 else 'b'
             color_list = list(df_terminated['CandleAccTradeVolume'].diff().fillna(0).apply(color_fuc))
-            bottom_axes.bar(index, df_terminated['CandleAccTradeVolume'], width=0.7, 
+            bottom_axes.bar(index, df_terminated['CandleAccTradeVolume'], width=0.8, 
                             align='center',
                             color=color_list,alpha=0.7)
 
             
+            # plt.pause(100)
+
             next_price=df.iloc[idx+term]['TradePrice']
             current_price=df_terminated.iloc[-1]['TradePrice']
 
             if next_price>=current_price:
                 up_count+=1
-                plt.savefig(dataset_path+'up/{0}_{1}.jpg'.format(coin,idx))
+                plt.savefig(dataset_path+'up/aaaaa{0}_{1}.jpg'.format(coin,idx))
             elif next_price<current_price:
                 down_count+=1
-                plt.savefig(dataset_path+'down/{0}_{1}.jpg'.format(coin,idx))
+                plt.savefig(dataset_path+'down/aaaaa{0}_{1}.jpg'.format(coin,idx))
 
             print(f'coin : {coin}_{time_unit},   up : {up_count},  down : {down_count},   total : {up_count+down_count}')
 
