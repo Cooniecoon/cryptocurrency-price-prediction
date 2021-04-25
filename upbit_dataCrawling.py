@@ -95,7 +95,8 @@ def get_minutes_data(code, minute, save=False, save_root='./'):
     return data
 
 # COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC',]
-COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC','EOS','ETH','ETC','ZIL','ADA','XRP','DOT','XLM','ATOM']
+# COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC','EOS','ETH','ETC','ZIL','ADA','XRP','DOT','XLM','ATOM']
+COIN_LIST=['LINK','VET','THETA','CRO','TRX','GLM','XTZ','ATOM','EMC2']
 
 # code = "BTC"
 Data_save_Path="./data/"
