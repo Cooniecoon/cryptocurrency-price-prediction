@@ -73,9 +73,10 @@ opt = parser.parse_args()
 
 code = "KRW-" + opt.code
 
+with open("secret_key.txt", "r") as f:
+    access = f.readline().strip()
+    secret = f.readline().strip()
 
-access = "ZMaNO5mzAkHMVYga3NXx3XSUtRClHEKgWVIigoSs"
-secret = "LOEqPWXPyzpA0k7macdbE6PWRnOyx6pvM6R70xzo"
 upbit = pyupbit.Upbit(access, secret)
 
 
