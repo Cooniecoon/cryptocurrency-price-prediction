@@ -7,10 +7,10 @@ import pandas as pd
 def get_ohlcv(ticker):
     dfs = [ ]
     # df = pyupbit.get_ohlcv(ticker, interval="minute1", to="20210423 11:00:00")
-    df = pyupbit.get_ohlcv(ticker, interval="minute1", to="20210414 23:00:00")
+    df = pyupbit.get_ohlcv(ticker, interval="minute1")
     dfs.append(df)
 
-    for i in range(60):
+    for i in range(100):
         df = pyupbit.get_ohlcv(ticker, interval="minute1", to=df.index[0])
         dfs.append(df)
         time.sleep(0.2)
@@ -85,14 +85,16 @@ def short_trading_for_1percent(df):
     # fig.show()
 
     return acc_ror
+COIN_LIST=['BTC','BCH','BTG','BSV','BCHA','LTC','EOS','ETH','ETC','ZIL','ADA','XRP','DOT','XLM','ATOM']
+# for ticker in COIN_LIST:
+#     ticker='KRW-'+ticker
+#     df = get_ohlcv(ticker)
+#     df.to_csv(f"./data/price/{ticker}_1min.csv")
 
-for ticker in ["KRW-BTC", "KRW-LTC", "KRW-ETH", "KRW-ADA"]:
-    df = get_ohlcv(ticker)
-    df.to_excel(f"{ticker}.xlsx")
-
-for ticker in ["KRW-BTC", "KRW-LTC", "KRW-ETH", "KRW-ADA"]:
+for ticker in COIN_LIST:
 # for ticker in ["KRW-LTC"]:
-    df = pd.read_excel(f"{ticker}.xlsx", index_col=0)
+    ticker='KRW-'+ticker
+    df = pd.read_csv(f"./data/price/{ticker}_1min.csv", index_col=0)
     ror = short_trading_for_1percent(df)
     기간수익률 = df.iloc[-1, 3] / df.iloc[0, 0]
-    print(ticker, f"{ror:.2f}", f"{기간수익률:.2f}")
+    print(ticker, f"ror : {ror:.2f}", f"기간수익률 : {기간수익률:.2f}")
